@@ -1,28 +1,16 @@
-// src/screens/CompoundingScreen.js
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Dimensions
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, Alert
 } from "react-native";
+import Svg, { Polyline } from "react-native-svg";
 import {
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  deleteDoc,
-  doc
+  collection, onSnapshot, query,
+  orderBy, deleteDoc, doc
 } from "firebase/firestore";
-import { LineChart } from "react-native-chart-kit";
 import { db } from "../firebase/firebaseConfig";
 import { colors, spacing, radius, fontSizes } from "../theme/colors";
 import { isAdmin } from "../utils/appVariant";
-
-const screenWidth = Dimensions.get("window").width;
 
 export default function CompoundingScreen({ navigation }) {
   const [rows, setRows] = useState([]);
@@ -42,39 +30,28 @@ export default function CompoundingScreen({ navigation }) {
     ]);
   };
 
-  const chartData = {
-    labels: rows.map((r) => `#${r.order}`),
-    datasets: [
-      {
-        data: rows.length ? rows.map((r) => parseFloat(r.endBalance) || 0) : [0]
-      }
-    ]
+  const renderChart = () => {
+    if (rows.length < 2) return null;
+    const values = rows.map(r => parseFloat(r.endBalance) || 0);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const points = values.map((v, i) =>
+      `${(i / (values.length - 1)) * 280 + 10},${90 - ((v - min) / range) * 80}`
+    ).join(" ");
+    return (
+      <View style={styles.chartCard}>
+        <Text style={styles.chartTitle}>Balance Growth</Text>
+        <Svg width="100%" height={110} viewBox="0 0 300 100">
+          <Polyline points={points} fill="none" stroke={colors.primary} strokeWidth="2.5" />
+        </Svg>
+      </View>
+    );
   };
 
   return (
     <ScrollView style={styles.container}>
-      {rows.length > 0 && (
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Balance Growth</Text>
-          <LineChart
-            data={chartData}
-            width={screenWidth - spacing.md * 2 - spacing.md * 2}
-            height={200}
-            chartConfig={{
-              backgroundColor: colors.surface,
-              backgroundGradientFrom: colors.surface,
-              backgroundGradientTo: colors.surface,
-              decimalPlaces: 2,
-              color: () => colors.primary,
-              labelColor: () => colors.textMuted,
-              propsForDots: { r: "3", fill: colors.accent }
-            }}
-            bezier
-            style={{ borderRadius: radius.md }}
-          />
-        </View>
-      )}
-
+      {renderChart()}
       <View style={styles.tableCard}>
         <View style={styles.tableHeader}>
           <Text style={[styles.cell, styles.headerCell, { flex: 0.6 }]}>#</Text>
@@ -84,7 +61,6 @@ export default function CompoundingScreen({ navigation }) {
           <Text style={[styles.cell, styles.headerCell, { flex: 1 }]}>End</Text>
           {isAdmin && <Text style={[styles.cell, styles.headerCell, { flex: 0.6 }]}> </Text>}
         </View>
-
         {rows.map((r) => {
           const start = parseFloat(r.startBalance) || 0;
           const percent = parseFloat(r.percent) || 0;
@@ -114,7 +90,6 @@ export default function CompoundingScreen({ navigation }) {
             </TouchableOpacity>
           );
         })}
-
         {rows.length === 0 && (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
@@ -123,16 +98,18 @@ export default function CompoundingScreen({ navigation }) {
           </View>
         )}
       </View>
-
       {isAdmin && (
         <TouchableOpacity
           style={styles.addBtn}
-          onPress={() => navigation.navigate("AdminCompoundingForm", { nextOrder: rows.length + 1, lastEnd: rows.length ? (parseFloat(rows[rows.length - 1].startBalance) * (1 + parseFloat(rows[rows.length - 1].percent) / 100)).toFixed(2) : "" })}
+          onPress={() => navigation.navigate("AdminCompoundingForm", {
+            nextOrder: rows.length + 1,
+            lastEnd: rows.length ? (parseFloat(rows[rows.length - 1].startBalance) * (1 + parseFloat(rows[rows.length - 1].percent) / 100)).toFixed(2) : ""
+          })}
         >
           <Text style={styles.addBtnText}>+ Add Row</Text>
         </TouchableOpacity>
       )}
-      {isAdmin && <View style={{ height: spacing.xl }} />}
+      <View style={{ height: spacing.xl }} />
     </ScrollView>
   );
 }
@@ -145,10 +122,9 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: "center"
+    borderColor: colors.border
   },
-  chartTitle: { fontWeight: "800", color: colors.primary, fontSize: fontSizes.md, marginBottom: spacing.sm, alignSelf: "flex-start" },
+  chartTitle: { fontWeight: "800", color: colors.primary, fontSize: fontSizes.md, marginBottom: spacing.sm },
   tableCard: {
     backgroundColor: colors.surface,
     marginHorizontal: spacing.md,
