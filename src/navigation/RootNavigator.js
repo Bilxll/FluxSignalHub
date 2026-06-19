@@ -1,8 +1,9 @@
 import React from "react";
-import { TouchableOpacity, Text, View, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, View, StyleSheet, ScrollView } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { LinearGradient } from "expo-linear-gradient";
 
 import HomeScreen from "../screens/HomeScreen";
 import SignalsListScreen from "../screens/SignalsListScreen";
@@ -10,8 +11,6 @@ import SignalDetailScreen from "../screens/SignalDetailScreen";
 import AdminSignalFormScreen from "../screens/AdminSignalFormScreen";
 import ChallengesScreen from "../screens/ChallengesScreen";
 import AdminChallengeFormScreen from "../screens/AdminChallengeFormScreen";
-import CompoundingScreen from "../screens/CompoundingScreen";
-import AdminCompoundingFormScreen from "../screens/AdminCompoundingFormScreen";
 import ChartsScreen from "../screens/ChartsScreen";
 import TradeHistoryScreen from "../screens/TradeHistoryScreen";
 import AdminTradeFormScreen from "../screens/AdminTradeFormScreen";
@@ -21,6 +20,11 @@ import LeaderboardScreen from "../screens/LeaderboardScreen";
 import AnalystsScreen from "../screens/AnalystsScreen";
 import AdminAnalystFormScreen from "../screens/AdminAnalystFormScreen";
 import WatchlistScreen from "../screens/WatchlistScreen";
+import ChatScreen from "../screens/ChatScreen";
+import ClassesScreen from "../screens/ClassesScreen";
+import AdminClassFormScreen from "../screens/AdminClassFormScreen";
+import CompoundingScreen from "../screens/CompoundingScreen";
+import AdminCompoundingFormScreen from "../screens/AdminCompoundingFormScreen";
 
 import { colors, fontSizes } from "../theme/colors";
 import { isAdmin } from "../utils/appVariant";
@@ -30,41 +34,133 @@ const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
 const TABS = [
-  { name: "Home", icon: "🏠", label: "Home" },
-  { name: "Signals", icon: "📈", label: "Signals" },
-  { name: "Challenges", icon: "🏆", label: "Challenges" },
-  { name: "Compounding", icon: "📊", label: "Compound" },
-  { name: "Charts", icon: "🕯️", label: "Charts" },
-  { name: "History", icon: "📋", label: "History" },
-  { name: "Members", icon: "👑", label: "Members" },
-  { name: "Leaderboard", icon: "🥇", label: "Rankings" },
-  { name: "Analysts", icon: "👤", label: "Analysts" },
-  { name: "Watchlist", icon: "👁️", label: "Watchlist" }
+  { name: "Home", icon: "ti-home", label: "Home" },
+  { name: "Signals", icon: "ti-chart-candle", label: "Signals" },
+  { name: "Challenges", icon: "ti-trophy", label: "Challenges" },
+  { name: "Chat", icon: "ti-message-circle", label: "Chat" },
+  { name: "Classes", icon: "ti-school", label: "Classes" },
+  { name: "Charts", icon: "ti-chart-line", label: "Charts" },
+  { name: "History", icon: "ti-clipboard-list", label: "History" },
+  { name: "Members", icon: "ti-crown", label: "Members" },
+  { name: "Leaderboard", icon: "ti-medal", label: "Rankings" },
+  { name: "Analysts", icon: "ti-user-circle", label: "Analysts" },
+  { name: "Watchlist", icon: "ti-eye", label: "Watchlist" },
+  { name: "Compounding", icon: "ti-trending-up", label: "Compound" }
 ];
 
-function CustomTabBar({ state, descriptors, navigation }) {
+function GlassIcon({ icon, active }) {
   return (
-    <View style={styles.tabBar}>
-      {state.routes.map((route, index) => {
-        const tab = TABS.find(t => t.name === route.name);
-        const isFocused = state.index === index;
-        return (
-          <TouchableOpacity
-            key={route.key}
-            style={styles.tabItem}
-            onPress={() => navigation.navigate(route.name)}
-          >
-            <Text style={styles.tabIcon}>{tab?.icon}</Text>
-            <Text style={[
-              styles.tabLabel,
-              { color: isFocused ? colors.primary : colors.textMuted }
-            ]}>
-              {tab?.label}
-            </Text>
-            {isFocused && <View style={styles.tabIndicator} />}
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.glassIcon, active && styles.glassIconActive]}>
+      <View style={[styles.glassShine, active && styles.glassShinActive]} />
+      <Text style={[styles.tablerIcon, { color: active ? colors.primary : "rgba(255,255,255,0.35)" }]}>
+        {/* We render via a Text with a Unicode space + the icon class name approach */}
+      </Text>
+    </View>
+  );
+}
+
+function CustomTabBar({ state, navigation }) {
+  return (
+    <View style={styles.tabBarOuter}>
+      <View style={styles.tabBarInner}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabBarScroll}
+        >
+          {state.routes.map((route, index) => {
+            const tab = TABS.find(t => t.name === route.name);
+            const active = state.index === index;
+            return (
+              <TouchableOpacity
+                key={route.key}
+                style={styles.tabItem}
+                onPress={() => navigation.navigate(route.name)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.glassIcon, active && styles.glassIconActive]}>
+                  <View style={styles.glassShine} />
+                  <Text
+                    style={[
+                      styles.iconText,
+                      { color: active ? colors.primary : "rgba(255,255,255,0.35)" }
+                    ]}
+                  >
+                    {getIcon(tab?.icon)}
+                  </Text>
+                </View>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                  {tab?.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    </View>
+  );
+}
+
+// Map icon names to Unicode characters from Tabler Icons font
+function getIcon(name) {
+  const map = {
+    "ti-home": "󰋞",
+    "ti-chart-candle": "󱧘",
+    "ti-trophy": "󰏃",
+    "ti-message-circle": "󰍦",
+    "ti-school": "󱆀",
+    "ti-chart-line": "󰄧",
+    "ti-clipboard-list": "󰓒",
+    "ti-crown": "󱒸",
+    "ti-medal": "󰆼",
+    "ti-user-circle": "󰀄",
+    "ti-eye": "󰈈",
+    "ti-trending-up": "󰇘"
+  };
+  return map[name] || "●";
+}
+
+function NavIcon({ name, active }) {
+  const iconMap = {
+    "ti-home": "🏠", "ti-chart-candle": "📈", "ti-trophy": "🏆",
+    "ti-message-circle": "💬", "ti-school": "🎓", "ti-chart-line": "📉",
+    "ti-clipboard-list": "📋", "ti-crown": "👑", "ti-medal": "🥇",
+    "ti-user-circle": "👤", "ti-eye": "👁", "ti-trending-up": "📊"
+  };
+  return iconMap[name] || "●";
+}
+
+function CustomTabBar2({ state, navigation }) {
+  return (
+    <View style={styles.tabBarOuter}>
+      <View style={styles.tabBarInner}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabBarScroll}
+        >
+          {state.routes.map((route, index) => {
+            const tab = TABS.find(t => t.name === route.name);
+            const active = state.index === index;
+            return (
+              <TouchableOpacity
+                key={route.key}
+                style={styles.tabItem}
+                onPress={() => navigation.navigate(route.name)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.glassIcon, active && styles.glassIconActive]}>
+                  <View style={styles.glassShine} />
+                  <Text style={styles.navEmoji}>{NavIcon({ name: tab?.icon })}</Text>
+                </View>
+                <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                  {tab?.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 }
@@ -72,10 +168,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
 function MainTabs() {
   const { logout } = useAuth() || {};
 
-  const headerStyle = {
-    headerStyle: { backgroundColor: colors.background },
-    headerTitleStyle: { color: colors.text, fontWeight: "800" },
-    headerShadowVisible: false,
+  const headerOpts = {
+    headerTransparent: true,
+    headerTitleStyle: { color: colors.text, fontWeight: "800", fontSize: fontSizes.lg },
     headerTintColor: colors.primary,
     headerRight: () =>
       isAdmin && logout ? (
@@ -87,19 +182,21 @@ function MainTabs() {
 
   return (
     <Tabs.Navigator
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={headerStyle}
+      tabBar={props => <CustomTabBar2 {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="Home" component={HomeScreen} options={{ title: "FLUX Traders", ...headerStyle }} />
-      <Tabs.Screen name="Signals" component={SignalsListScreen} options={{ title: isAdmin ? "Manage Signals" : "Signals", ...headerStyle }} />
-      <Tabs.Screen name="Challenges" component={ChallengesScreen} options={{ title: "Challenges", ...headerStyle }} />
-      <Tabs.Screen name="Compounding" component={CompoundingScreen} options={{ title: "Compounding", ...headerStyle }} />
-      <Tabs.Screen name="Charts" component={ChartsScreen} options={{ title: "Charts", ...headerStyle }} />
-      <Tabs.Screen name="History" component={TradeHistoryScreen} options={{ title: "Trade History", ...headerStyle }} />
-      <Tabs.Screen name="Members" component={MembersScreen} options={{ title: "Members Area", ...headerStyle }} />
-      <Tabs.Screen name="Leaderboard" component={LeaderboardScreen} options={{ title: "Leaderboard", ...headerStyle }} />
-      <Tabs.Screen name="Analysts" component={AnalystsScreen} options={{ title: "Our Analysts", ...headerStyle }} />
-      <Tabs.Screen name="Watchlist" component={WatchlistScreen} options={{ title: "Watchlist", ...headerStyle }} />
+      <Tabs.Screen name="Home" component={HomeScreen} />
+      <Tabs.Screen name="Signals" component={SignalsListScreen} />
+      <Tabs.Screen name="Challenges" component={ChallengesScreen} />
+      <Tabs.Screen name="Chat" component={ChatScreen} />
+      <Tabs.Screen name="Classes" component={ClassesScreen} />
+      <Tabs.Screen name="Charts" component={ChartsScreen} />
+      <Tabs.Screen name="History" component={TradeHistoryScreen} />
+      <Tabs.Screen name="Members" component={MembersScreen} />
+      <Tabs.Screen name="Leaderboard" component={LeaderboardScreen} />
+      <Tabs.Screen name="Analysts" component={AnalystsScreen} />
+      <Tabs.Screen name="Watchlist" component={WatchlistScreen} />
+      <Tabs.Screen name="Compounding" component={CompoundingScreen} />
     </Tabs.Navigator>
   );
 }
@@ -109,11 +206,10 @@ export default function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
+          headerTransparent: true,
           headerTitleStyle: { color: colors.text, fontWeight: "800" },
-          headerShadowVisible: false,
           headerTintColor: colors.primary,
-          contentStyle: { backgroundColor: colors.background }
+          contentStyle: { backgroundColor: "transparent" }
         }}
       >
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
@@ -126,6 +222,7 @@ export default function RootNavigator() {
             <Stack.Screen name="AdminTradeForm" component={AdminTradeFormScreen} options={{ title: "Log Trade" }} />
             <Stack.Screen name="AdminMemberTierForm" component={AdminMemberTierFormScreen} options={({ route }) => ({ title: route.params?.tier ? "Edit Tier" : "Create Tier" })} />
             <Stack.Screen name="AdminAnalystForm" component={AdminAnalystFormScreen} options={({ route }) => ({ title: route.params?.analyst ? "Edit Analyst" : "Add Analyst" })} />
+            <Stack.Screen name="AdminClassForm" component={AdminClassFormScreen} options={({ route }) => ({ title: route.params?.classItem ? "Edit Class" : "New Class" })} />
           </>
         )}
       </Stack.Navigator>
@@ -134,31 +231,53 @@ export default function RootNavigator() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
-    flexDirection: "row",
-    backgroundColor: colors.backgroundSecondary,
+  tabBarOuter: {
+    backgroundColor: "rgba(5,10,14,0.95)",
     borderTopWidth: 1,
-    borderTopColor: colors.glassBorder,
+    borderTopColor: "rgba(255,255,255,0.06)",
     paddingBottom: 20,
-    paddingTop: 8
+    paddingTop: 10
+  },
+  tabBarInner: { flexDirection: "row" },
+  tabBarScroll: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    gap: 6,
+    alignItems: "center"
   },
   tabItem: {
-    flex: 1,
     alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 2
+  },
+  glassIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.09)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
     position: "relative"
   },
-  tabIcon: { fontSize: 18 },
+  glassIconActive: {
+    backgroundColor: "rgba(0,200,83,0.13)",
+    borderColor: "rgba(0,200,83,0.32)"
+  },
+  glassShine: {
+    position: "absolute",
+    top: 0, left: 0, right: 0,
+    height: "50%",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderRadius: 14
+  },
+  navEmoji: { fontSize: 20 },
   tabLabel: {
     fontSize: 9,
-    fontWeight: "700",
-    marginTop: 2
+    color: "rgba(255,255,255,0.28)",
+    fontWeight: "600"
   },
-  tabIndicator: {
-    position: "absolute",
-    top: -8,
-    width: 20,
-    height: 3,
-    backgroundColor: colors.primary,
-    borderRadius: 2
-  }
+  tabLabelActive: { color: colors.primary }
 });
